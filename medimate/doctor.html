@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4A90E2">
+<meta charset="UTF-8">
+<title data-lang="doctorTitle">Doctor</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+<h1 data-lang="doctorTitle">🩺 Doctor Appointment</h1>
+
+<div class="glass">
+<input id="docName" data-lang-placeholder="docName" placeholder="Doctor Name">
+<input type="date" id="docDate">
+<input type="time" id="docTime">
+
+<button onclick="saveDoctor()" data-lang="saveBtn">Save</button>
+
+<p id="doctorInfo"></p>
+</div>
+
+<button onclick="goBack()" data-lang="back">⬅ Back</button>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
