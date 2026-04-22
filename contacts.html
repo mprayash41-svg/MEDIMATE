@@ -1,29 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4A90E2">
-    <meta charset="UTF-8">
-    <title>Contacts</title>
-    <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4A90E2">
+  <meta charset="UTF-8">
+  <title>Contacts</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body onload="applyLanguage()">
 
 <div class="container">
-    <h1 data-lang="emergencyTitle">📞 Emergency Contact</h1>
+  <h1 id="contactTitle">📞 Emergency Contact</h1>
 
-    <div class="glass">
-        <input type="text" id="contactNameInput" placeholder="Name">
-        <input type="tel" id="contactPhoneInput" placeholder="Phone Number">
+  <div class="glass">
+    <input id="contactName" placeholder="Name">
+    <input id="contactPhone" type="tel" placeholder="Phone Number">
 
-        <button onclick="saveContact()" data-lang="save">Save</button>
-        <button onclick="openSOS()" data-lang="sos" class="sos-btn">SOS</button>
-    </div>
+    <button onclick="saveContact()" id="saveBtn">Save</button>
+    <!-- ✅ FIXED HERE -->
+    <button onclick="openSOS()" id="sosBtn">SOS</button>
+  </div>
 
-    <p id="savedContactDisplay"></p>
+  <p id="savedContact"></p>
 
-    <button onclick="goBack()" data-lang="back">⬅ Back</button>
+  <button onclick="goBack()" id="backBtn">⬅ Back</button>
 </div>
 
 <script src="script.js"></script>
