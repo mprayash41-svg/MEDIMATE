@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4A90E2">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4A90E2">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crisis Mode</title>
+    <style>
+        body { background:#7f1d1d; color:white; text-align:center; font-family:sans-serif; padding:20px; display:flex; flex-direction:column; justify-content:center; height:90vh; }
+        .emergency { animation: pulse 0.5s infinite; background: #b91c1c; padding: 40px; border-radius: 20px; border: 5px solid white; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        button { padding:20px; margin-top:20px; width:100%; border:none; border-radius:10px; font-weight:bold; font-size:1.2rem; cursor:pointer; }
+    </style>
+</head>
+<body>
+    <div class="emergency">
+        <h1>🚨 MISSED DOSE!</h1>
+        <p>Vibrating to Alert You</p>
+        <button onclick="stopCrisis()">STOP & GO HOME</button>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Start the heavy vibration as soon as the page loads
+        window.onload = function() {
+            startVibration();
+        };
+
+        function stopCrisis() {
+            stopVibration();
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
