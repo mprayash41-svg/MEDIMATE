@@ -1,36 +1,41 @@
 // ================= SERVICE WORKER =================
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(() => console.log('✅ SW Registered'))
-      .catch(err => console.error('❌ SW Failed:', err));
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(function () { console.log('SW Registered'); })
+      .catch(function (err) { console.log('SW Failed:', err); });
   });
 }
 
 // ================= GLOBAL VARIABLES =================
 let rewardPoints = parseInt(localStorage.getItem("rewards")) || 0;
 let vInterval = null;
+let alreadyTriggered = false;
 
 // ================= AUTOMATIC VIBRATION CHECKER =================
-setInterval(() => {
+setInterval(function () {
+  if (alreadyTriggered) return;
+
   const meds = JSON.parse(localStorage.getItem("medicines")) || [];
   const now = new Date();
 
   const currentTime =
-    now.getHours().toString().padStart(2, '0') + ":" +
-    now.getMinutes().toString().padStart(2, '0');
+    String(now.getHours()).padStart(2, '0') + ":" +
+    String(now.getMinutes()).padStart(2, '0');
 
   let triggered = false;
 
-  const updatedMeds = meds.map(m => {
+  const updatedMeds = meds.map(function (m) {
     if (m.time === currentTime && !m.isHandled) {
       triggered = true;
-      return { ...m, isHandled: true };
+      m.isHandled = true;
     }
     return m;
   });
 
   if (triggered) {
+    alreadyTriggered = true;
+
     localStorage.setItem("medicines", JSON.stringify(updatedMeds));
 
     if ("vibrate" in navigator) {
@@ -45,7 +50,7 @@ setInterval(() => {
 function updatePointsDisplay() {
   const display = document.getElementById("pointDisplay");
   if (display) {
-    display.innerText = `🌟 ${rewardPoints}`;
+    display.innerText = "🌟 " + rewardPoints;
     localStorage.setItem("rewards", rewardPoints);
   }
 }
@@ -54,7 +59,7 @@ function updatePointsDisplay() {
 function startVibration() {
   if ("vibrate" in navigator) {
     clearInterval(vInterval);
-    vInterval = setInterval(() => {
+    vInterval = setInterval(function () {
       navigator.vibrate([1000, 500, 1000, 500, 2000]);
     }, 5000);
     navigator.vibrate([1000, 500, 1000]);
@@ -66,38 +71,21 @@ function stopVibration() {
   if ("vibrate" in navigator) navigator.vibrate(0);
 }
 
-function markMissed() {
-  rewardPoints = Math.max(0, rewardPoints - 15);
-  updatePointsDisplay();
-
-  addHistory("🚨 Missed");
-
-  if (Notification.permission === "granted") {
-    new Notification("🚨 Medicine Missed!");
-  }
-
-  if ("vibrate" in navigator) navigator.vibrate([500, 200, 500]);
-
-  setTimeout(() => {
-    window.location.href = "vibration.html";
-  }, 1000);
-}
-
 // ================= MED ACTION =================
 function handleMedAction(checkbox, medName) {
+  let meds = JSON.parse(localStorage.getItem("medicines")) || [];
+
   if (checkbox.checked) {
     rewardPoints += 10;
     updatePointsDisplay();
 
     stopVibration();
-    addHistory(`Taken: ${medName}`);
+    addHistory("Taken: " + medName);
 
-    let meds = JSON.parse(localStorage.getItem("medicines")) || [];
-    const updatedMeds = meds.map(m =>
-      m.name === medName ? { ...m, isHandled: true } : m
-    );
-
-    localStorage.setItem("medicines", JSON.stringify(updatedMeds));
+    meds = meds.map(function (m) {
+      if (m.name === medName) m.isHandled = true;
+      return m;
+    });
 
     checkbox.parentElement.style.opacity = "0.5";
     checkbox.disabled = true;
@@ -105,17 +93,20 @@ function handleMedAction(checkbox, medName) {
   } else {
     rewardPoints = Math.max(0, rewardPoints - 15);
     updatePointsDisplay();
+
     startVibration();
-    addHistory(`🚨 MISSED: ${medName} (-15 Points)`);
+    addHistory("🚨 MISSED: " + medName + " (-15 Points)");
   }
+
+  localStorage.setItem("medicines", JSON.stringify(meds));
 }
 
 // ================= SAFE INIT =================
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", function () {
   try {
     if (typeof loadTheme === "function") loadTheme();
     if (typeof applyLanguage === "function") applyLanguage();
-  } catch(e){}
+  } catch (e) {}
 
   loadHistory();
   loadSavedContact();
@@ -132,19 +123,29 @@ if ("Notification" in window) {
 
 // ================= LOGIN =================
 function register() {
-  let u = document.getElementById("username")?.value.trim();
-  let p = document.getElementById("password")?.value.trim();
+  let uEl = document.getElementById("username");
+  let pEl = document.getElementById("password");
+
+  let u = uEl ? uEl.value.trim() : "";
+  let p = pEl ? pEl.value.trim() : "";
 
   if (!u || !p) return alert("Fill all fields");
-  if (localStorage.getItem("user_" + u)) return alert("User already exists!");
+
+  if (localStorage.getItem("user_" + u)) {
+    return alert("User already exists!");
+  }
 
   localStorage.setItem("user_" + u, p);
   alert("Registered successfully ✅");
 }
 
 function login() {
-  let u = document.getElementById("username")?.value.trim();
-  let p = document.getElementById("password")?.value.trim();
+  let uEl = document.getElementById("username");
+  let pEl = document.getElementById("password");
+
+  let u = uEl ? uEl.value.trim() : "";
+  let p = pEl ? pEl.value.trim() : "";
+
   let stored = localStorage.getItem("user_" + u);
 
   if (!stored) return alert("User not found ❌");
@@ -190,7 +191,8 @@ const translations = {
 function applyLanguage() {
   let lang = localStorage.getItem("lang") || "en";
   let t = translations[lang];
-  document.querySelectorAll("[data-lang]").forEach(el => {
+
+  document.querySelectorAll("[data-lang]").forEach(function (el) {
     let key = el.getAttribute("data-lang");
     if (t[key]) el.innerText = t[key];
   });
@@ -199,27 +201,34 @@ function applyLanguage() {
 function changeLanguage() {
   let select = document.getElementById("languageSelect");
   if (!select) return;
+
   localStorage.setItem("lang", select.value);
   applyLanguage();
 }
 
 // ================= MEDICINES =================
 function addMedicine() {
-  const name = document.getElementById("medName").value;
-  const dose = document.getElementById("medDose").value;
-  const time = document.getElementById("medTime").value;
+  let nameEl = document.getElementById("medName");
+  let doseEl = document.getElementById("medDose");
+  let timeEl = document.getElementById("medTime");
+
+  let name = nameEl ? nameEl.value.trim() : "";
+  let dose = doseEl ? doseEl.value.trim() : "";
+  let time = timeEl ? timeEl.value : "";
 
   if (!name || !dose || !time) return alert("Fill all fields");
 
   let meds = JSON.parse(localStorage.getItem("medicines")) || [];
-  meds.push({ name, dose, time, isHandled: false });
+  meds.push({ name: name, dose: dose, time: time, isHandled: false });
 
   localStorage.setItem("medicines", JSON.stringify(meds));
+
   addHistory("Added: " + name);
 
   window.location.href = "dashboard.html";
 }
 
+// ================= DISPLAY MEDS (FIXED SAFE) =================
 function displayMedicines() {
   const container = document.getElementById("medicineListDisplay");
   if (!container) return;
@@ -227,62 +236,74 @@ function displayMedicines() {
   const meds = JSON.parse(localStorage.getItem("medicines")) || [];
 
   if (meds.length === 0) {
-    container.innerHTML = "<p style='color:white;text-align:center;'>No medicines added today.</p>";
+    container.innerHTML = "<p>No medicines added today.</p>";
     return;
   }
 
-  container.innerHTML = meds.map((m) => `
-    <div class="glass-item" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:15px;background:rgba(255,255,255,0.1);border-radius:12px;opacity:${m.isHandled ? '0.5':'1'}">
-      <div>
-        <strong style="color:white;">${m.name}</strong> (${m.dose})<br>
-        <small style="color:#ff9f43;">⏰ ${m.time}</small>
-      </div>
-      <input type="checkbox"
-        ${m.isHandled ? 'checked disabled':''}
-        onchange='handleMedAction(this, "${m.name}")'
-        style="width:25px;height:25px;">
-    </div>
-  `).join("");
+  container.innerHTML = "";
+
+  meds.forEach(function (m) {
+    let div = document.createElement("div");
+    div.style = "display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:15px;background:rgba(255,255,255,0.1);border-radius:12px;";
+
+    if (m.isHandled) div.style.opacity = "0.5";
+
+    let info = document.createElement("div");
+    info.innerHTML = "<strong>" + m.name + "</strong> (" + m.dose + ")<br><small>⏰ " + m.time + "</small>";
+
+    let checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.style = "width:25px;height:25px;";
+    checkbox.checked = m.isHandled;
+
+    if (m.isHandled) checkbox.disabled = true;
+
+    checkbox.addEventListener("change", function () {
+      handleMedAction(this, m.name);
+    });
+
+    div.appendChild(info);
+    div.appendChild(checkbox);
+    container.appendChild(div);
+  });
 }
 
 // ================= HISTORY =================
 function addHistory(title) {
   let history = JSON.parse(localStorage.getItem("history")) || [];
-  history.unshift({ title: title || "Record", time: new Date().toLocaleString() });
-  localStorage.setItem("history", JSON.stringify(history.slice(0,20)));
+
+  history.unshift({
+    title: title || "Record",
+    time: new Date().toLocaleString()
+  });
+
+  localStorage.setItem("history", JSON.stringify(history.slice(0, 20)));
 }
 
 function loadHistory() {
   let history = JSON.parse(localStorage.getItem("history")) || [];
   let list = document.getElementById("historyList");
+
   if (!list) return;
 
-  list.innerHTML = history.map(h => `
-    <div class="glass" style="margin-bottom:10px;text-align:left;padding:10px;">
-      <b>${h.title}</b><br><small>🕒 ${h.time}</small>
-    </div>
-  `).join("") || "No history found";
+  list.innerHTML = history.map(function (h) {
+    return "<div style='margin-bottom:10px;padding:10px;background:#1e293b;border-radius:10px;'>" +
+      "<b>" + h.title + "</b><br><small>🕒 " + h.time + "</small></div>";
+  }).join("") || "No history found";
 }
 
 // ================= CONTACT =================
 function saveContact() {
-  let name = document.getElementById("contactName")?.value.trim();
-  let phone = document.getElementById("contactPhone")?.value.trim();
+  let nameEl = document.getElementById("contactName");
+  let phoneEl = document.getElementById("contactPhone");
 
-  if (!name || !phone) {
-    alert("⚠️ Please fill all fields");
-    return;
-  }
+  let name = nameEl ? nameEl.value.trim() : "";
+  let phone = phoneEl ? phoneEl.value.trim() : "";
 
-  let cleanPhone = phone.replace(/\D/g, "");
-
-  if (cleanPhone.length < 10) {
-    alert("⚠️ Enter valid phone number");
-    return;
-  }
+  if (!name || !phone) return alert("⚠️ Fill all fields");
 
   localStorage.setItem("contactName", name);
-  localStorage.setItem("contactPhone", cleanPhone);
+  localStorage.setItem("contactPhone", phone);
 
   alert("✅ Contact saved!");
   loadSavedContact();
@@ -294,7 +315,7 @@ function loadSavedContact() {
   let display = document.getElementById("savedContact");
 
   if (name && phone && display) {
-    display.innerText = `Saved: ${name} (${phone})`;
+    display.innerText = "Saved: " + name + " (" + phone + ")";
   }
 }
 
@@ -309,10 +330,8 @@ function openSOS() {
 
   let cleanPhone = phone.replace(/\D/g, "");
 
-  if (cleanPhone.length === 10) {
-    cleanPhone = "91" + cleanPhone;
-  }
+  if (cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
 
-  const message = "🚨 Emergency! Please check on me (MediMate)";
-  window.location.href = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+  const message = encodeURIComponent("🚨 Emergency! Please check on me (MediMate)");
+  window.location.href = "https://wa.me/" + cleanPhone + "?text=" + message;
 }
